@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, SyntheticEvent, ChangeEventHandler, MouseEventHandler } from 'react';
 import { Link } from 'react-router-dom';
-import PropTypes from 'prop-types';
 
 import {
   Container, Title, Load, InputField, List, InputNumber, InputRadio, ContainerButton, Button, LinkStyle,
 } from './StyledComponents/StyleSetup';
 
-export default function SetupQuizz({ getUrl }) {
-  const [options, setOptions] = useState({});
+interface Categories {
+  id: number;
+  name: string;
+}
+
+interface Options {
+  amount?: string;
+  category?: string;
+  difficulty?: string;
+  type?: string;
+}
+
+export default function SetupQuizz({ getUrl }: any) {
+  const [options, setOptions] = useState<Options>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [categories, setCategories] = useState([]);
 
@@ -15,14 +26,23 @@ export default function SetupQuizz({ getUrl }) {
     async function fetchData() {
       const response = await fetch('https://opentdb.com/api_category.php');
       const data = await response.json();
-      setCategories(await data.trivia_categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>));
+      setCategories(await data.trivia_categories.map((category: Categories) => <option value={category.id} key={category.id}>{category.name}</option>));
       setIsLoaded(true);
     }
     fetchData();
   }, []);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+  const handleChange: ChangeEventHandler = (event) => {
+    const { name, value } = event.target as HTMLInputElement;
+
+    setOptions((prevOptions) => ({
+      ...prevOptions,
+      [name]: value,
+    }));
+  };
+
+  const handleClick: MouseEventHandler = (event) => {
+    const { name, value } = event.target as HTMLInputElement;
 
     setOptions((prevOptions) => ({
       ...prevOptions,
@@ -75,11 +95,11 @@ export default function SetupQuizz({ getUrl }) {
 
         <InputField htmlFor="mult-choice" disp="block">
           Multiple choice
-          <InputRadio type="radio" id="mult-choice" name="type" value="multiple" onClick={handleChange} required />
+          <InputRadio type="radio" id="mult-choice" name="type" value="multiple" onClick={handleClick} required />
         </InputField>
         <InputField htmlFor="true-false" disp="block">
           True or False
-          <InputRadio type="radio" id="true-false" name="type" value="boolean" onClick={handleChange} required />
+          <InputRadio type="radio" id="true-false" name="type" value="boolean" onClick={handleClick} required />
         </InputField>
 
         <Link onClick={startQuizz} to="/quizz" style={LinkStyle}>
@@ -92,7 +112,3 @@ export default function SetupQuizz({ getUrl }) {
     </Container>
   );
 }
-
-SetupQuizz.propTypes = {
-  getUrl: PropTypes.func.isRequired,
-};
